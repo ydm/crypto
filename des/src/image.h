@@ -59,5 +59,5 @@ image_set(struct image *img,
     img->pixels[index] = (struct pixel) { r, g, b, a };
 }
 
-struct image *image_load_ppm(const char *filename);
-void image_save_ppm(struct image *img, const char *filename);
+struct image *image_load_pam(const char *filename);
+void image_save_pam(struct image *img, const char *filename);

@@ -5,10 +5,10 @@
 
 
 int
-main()
+main_encode()
 {
      // Load the input image
-     struct image *img = image_load_ppm("/tmp/tux.ppm");
+     struct image *img = image_load_pam("/tmp/tux.pam");
      const size_t total = img->width * img->height * 4;
      // Check if the nuber of bytes is actually divisible by 8, which
      // is the block size of DES.
@@ -35,19 +35,27 @@ main()
           // Encode
           encode(key, source + offset, output);
 
+          // for (int j = 0; j < 8; j++)
+          // {
+          //      printf("j=%d, source[%d]=%d, output[%d]=%d\n",
+          //             j,
+          //             j, (unsigned char) source[j],
+          //             j, (unsigned char) output[j]);
+          // }
+
           // Store
           memcpy(dest + offset, output, 8);
      }
-     image_save_ppm(enc, "/tmp/encoded.ppm");
+     image_save_pam(enc, "/tmp/encoded.pam");
      image_delete(enc);
      image_delete(img);
      return 0;
 }
 
 int
-main2()
+main_decode()
 {
-     struct image *img = image_load_ppm("/tmp/encoded.ppm");
+     struct image *img = image_load_pam("/tmp/encoded.pam");
      struct image *dec = image_new(img->width, img->height);
 
      const char *source = (const char *) img->pixels;
@@ -56,23 +64,16 @@ main2()
      const size_t total = img->width * img->height * 4;
      const size_t n = total / 8;
 
-     for (int i = 0; i < 8; i++)
-     {
-          printf("%d %d\n", i, (unsigned char) source[i]);
-     }
-
      const char *key = "password";
      char output[8];
-     for (size_t i = 0; i < 1; i++)
+     for (size_t i = 0; i < n; i++)
      {
           size_t offset = i * 8;
           decode(key, source + offset, output);
-          for (int j = 0; j < 8; j++)
-               printf("j=%d output=%d\n", j, (unsigned char) output[j]);
           memcpy(dest + offset, output, 8);
      }
 
-     image_save_ppm(dec, "/tmp/decoded.ppm");
+     image_save_pam(dec, "/tmp/decoded.pam");
      image_delete(dec);
      image_delete(img);
      return 0;
@@ -84,19 +85,41 @@ main2()
 // {
 //      return (unsigned char) round(x * 255.0f);
 // }
-//
-// struct image img;
-// image_init(&img, 600, 400);
-// for (size_t x = 0; x < 600; x++)
-// {
-//      for (size_t y = 0; y < 400; y++)
-//      {
-//           image_set(&img, x, y, chan(x/599.0f), chan(y/499.0f), 0, 255);
-//      }
-// }
-// image_save_ppm(&img, "/tmp/output.ppm");
-// image_deinit(&img);
 
+// int
+// main()
+// {
+//      struct image *img = image_load_pam("/tmp/tux.pam");
+
+//      for (size_t y = 0; y < img->height; y++)
+//      {
+//           for (size_t x = 0; x < img->width; x++)
+//           {
+//                size_t index = image_index(img, x, y);
+//                img->pixels[index].a = 255/3;
+//           }
+//      }
+     
+//      image_save_pam(img, "/tmp/xexe.pam");
+//      return 0;
+// }
+
+// int
+// main()
+// {
+//      struct image img;
+//      image_init(&img, 600, 400);
+//      for (size_t x = 0; x < 600; x++)
+//      {
+//           for (size_t y = 0; y < 400; y++)
+//           {
+//                image_set(&img, x, y, chan(x/599.0f), chan(y/499.0f), 0, 255);
+//           }
+//      }
+//      image_save_pam(&img, "/tmp/output.pam");
+//      image_deinit(&img);
+//      return 0;
+// }
 
 // #include <inttypes.h>
 
@@ -131,3 +154,9 @@ main2()
 
 //      return 0;
 // }
+
+int
+main()
+{
+     return main_decode();
+}
