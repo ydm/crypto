@@ -1,6 +1,9 @@
 #include "des.h"
 
 
+#define ASU64(x) (*(uint64_t *) (x))
+
+
 // Remaps all bits except 8, 16, 24, 32, 40, 48, 56, 64 (56 in total).
 static const int PERMUTED_CHOICE1[56] = {
     56, 48, 40, 32, 24, 16, 8,
@@ -310,16 +313,69 @@ perform(const char *key, const char *plaintext, char *output, int decode)
      u64_to_string(enc, output);
 }
 
-void
-encode(const char *key, const char *plaintext, char *output)
+static void
+xor8 (const char *left, const char *right, char *out)
 {
-     perform(key, plaintext, output, 0);
+     for (int i = 0; i < 8; i++)
+     {
+          out[i] = left[i] ^ right[i];
+     }
 }
 
-void
-decode(const char *key, const char *ciphertext, char *output)
+int
+encode_ecb(const char *key, const char *plaintext, char *output, size_t n)
 {
-     perform(key, ciphertext, output, 1);
+     if (n % 8 != 0)
+     {
+          return 1;
+     }
+     for (size_t offset = 0; offset < n; offset += 8)
+     {
+          perform(key,
+                  plaintext + offset,
+                  output + offset,
+                  0);
+     }
+     return 0;
+}
+
+int
+decode_ecb(const char *key, const char *ciphertext, char *output, size_t n)
+{
+     if (n % 8 != 0)
+     {
+          return 1;
+     }
+     for (size_t offset = 0; offset < n; offset += 8)
+     {
+          perform(key,
+                  ciphertext + offset,
+                  output + offset,
+                  1);
+     }
+}
+
+int
+encode_cbc(const char *key, const char *initial, const char *plaintext, char *output, size_t n)
+{
+     if (n % 8 != 0)
+     {
+          return 1;
+     }
+     char prev[8];
+     memcpy(prev, initial, 8);
+
+     char encoded[8];
+     for (size_t offset = 0; offset < n; offset += 8)
+     {
+          perform(key,
+                  plaintext + offset,
+                  encoded,
+                  0);
+          xor8(prev, encoded, output + offset);
+          memcpy(prev, temp, 8);
+     }
+     return 0;
 }
 
 // #include <stdio.h>
@@ -356,3 +412,6 @@ decode(const char *key, const char *ciphertext, char *output)
 
 //      return 0;
 // }
+
+
+#undef ASU64

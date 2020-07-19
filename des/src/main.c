@@ -4,7 +4,7 @@
 #include "image.h"
 
 
-int
+static int
 main_encode()
 {
      // Load the input image
@@ -18,7 +18,6 @@ main_encode()
           printf("%zu is not divisible by 8\n", total);
           exit(EXIT_FAILURE);
      }
-     const size_t n = total / 8;
 
      // Create another image that's going to hold the encoded copy.
      struct image *enc = image_new(img->width, img->height);
@@ -27,32 +26,16 @@ main_encode()
      const char *key = "password";
      const char *source = (const char *) img->pixels;
      char *dest = (char *) enc->pixels;
+     const char *initial = "kuremure";
+     encode_cbc(key, initial, source, dest, total);
 
-     char output[8];
-     for (size_t i = 0; i < n; i++)
-     {
-          size_t offset = i * 8;
-          // Encode
-          encode(key, source + offset, output);
-
-          // for (int j = 0; j < 8; j++)
-          // {
-          //      printf("j=%d, source[%d]=%d, output[%d]=%d\n",
-          //             j,
-          //             j, (unsigned char) source[j],
-          //             j, (unsigned char) output[j]);
-          // }
-
-          // Store
-          memcpy(dest + offset, output, 8);
-     }
      image_save_pam(enc, "/tmp/encoded.pam");
      image_delete(enc);
      image_delete(img);
      return 0;
 }
 
-int
+static int
 main_decode()
 {
      struct image *img = image_load_pam("/tmp/encoded.pam");
@@ -62,16 +45,9 @@ main_decode()
      char *dest = (char *) dec->pixels;
 
      const size_t total = img->width * img->height * 4;
-     const size_t n = total / 8;
 
      const char *key = "password";
-     char output[8];
-     for (size_t i = 0; i < n; i++)
-     {
-          size_t offset = i * 8;
-          decode(key, source + offset, output);
-          memcpy(dest + offset, output, 8);
-     }
+     decode_ecb(key, source, dest, total);
 
      image_save_pam(dec, "/tmp/decoded.pam");
      image_delete(dec);
@@ -158,5 +134,6 @@ main_decode()
 int
 main()
 {
-     return main_decode();
+     main_encode();
+     // main_decode();
 }

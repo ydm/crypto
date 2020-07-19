@@ -20,5 +20,7 @@ u64_to_string(uint64_t u, char *s)
      memcpy(s, &u, 8);
 }
 
-void encode(const char *key, const char *plaintext, char *output);
-void decode(const char *key, const char *ciphertext, char *output);
+int encode_ecb(const char *key, const char *plaintext, char *output, size_t n);
+int decode_ecb(const char *key, const char *ciphertext, char *output, size_t n);
+
+int encode_cbc(const char *key, const char *initial, const char *plaintext, char *output, size_t n);
