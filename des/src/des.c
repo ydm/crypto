@@ -293,6 +293,23 @@ reverse(uint64_t ary[16])
     }
 }
 
+/** Assumes little-endian CPU. */
+static inline uint64_t
+string_to_u64(const char *s)
+{
+     uint64_t u;
+     memcpy(&u, s, 8);
+     u = __builtin_bswap64(u);  // Convert to big endian.
+     return u;
+}
+
+static inline void
+u64_to_string(uint64_t u, char *s)
+{
+     u = __builtin_bswap64(u);  // Convert to little endian.
+     memcpy(s, &u, 8);
+}
+
 static void
 perform(const char *key, const char *plaintext, char *output, int decode)
 {
@@ -341,35 +358,57 @@ decode_ecb(const char *key, const char *ciphertext, size_t n, char *output)
                 output + offset,
                 1);
     }
+    return 0;
 }
 
-// static void
-// xor8 (const char *left, const char *right, char *out)
-// {
-//      for (int i = 0; i < 8; i++)
-//      {
-//           out[i] = left[i] ^ right[i];
-//      }
-// }
+static void
+xor8 (const char *left, const char *right, char *out)
+{
+     for (int i = 0; i < 8; i++)
+     {
+          out[i] = left[i] ^ right[i];
+     }
+}
 
-// int
-// encode_cbc(const char *key, const char *initial, const char *plaintext, char *output, size_t n)
-// {
-//      if (n % 8 != 0)
-//      {
-//           return 1;
-//      }
-//      char prev[8];
-//      memcpy(prev, initial, 8);
-//      char encoded[8];
-//      for (size_t offset = 0; offset < n; offset += 8)
-//      {
-//           perform(key,
-//                   plaintext + offset,
-//                   encoded,
-//                   0);
-//           xor8(prev, encoded, output + offset);
-//           memcpy(prev, encoded, 8);
-//      }
-//      return 0;
-// }
+int
+encode_cbc(const char *key, const char *initial,
+           const char *plaintext, size_t n,
+           char *output)
+{
+     if (n % 8 != 0)
+     {
+          return 1;
+     }
+     char prev[8];
+     memcpy(prev, initial, 8);
+     char xored[8];
+     for (size_t offset = 0; offset < n; offset += 8)
+     {
+         xor8(prev, plaintext + offset, xored);   // xored = prev^plaintext
+         perform(key, xored, output + offset, 0); // output = E(xored)
+         memcpy(prev, output + offset, 8);        // prev = output
+     }
+     return 0;
+}
+
+int
+decode_cbc(const char *key, const char *initial,
+           const char *ciphertext, size_t n,
+           char *output)
+{
+    if (n % 8 != 0)
+    {
+        return 1;
+    }
+    char prev[8];
+    memcpy(prev, initial, 8);
+
+    char xored[8];
+    for (size_t offset = 0; offset < n; offset += 8)
+    {
+        perform(key, ciphertext + offset, xored, 1); // xored = D(ciphertext)
+        xor8(xored, prev, output + offset);          // output = prev^xored
+        memcpy(prev, ciphertext + offset, 8);        // prev = ciphertext
+    }
+    return 0;
+}

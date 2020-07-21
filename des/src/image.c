@@ -5,8 +5,11 @@
 struct image *
 image_load_pam(const char *filename)
 {
-     
      FILE *f = fopen(filename, "rb");
+     if (!f)
+     {
+          return NULL;
+     }
      size_t width, height;
 
      fscanf(f, "P7\n");
