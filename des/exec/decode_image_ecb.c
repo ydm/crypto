@@ -27,6 +27,7 @@ main(int argc __attribute__((unused)), char *argv[])
 
     const char *key = "password";
     decode_ecb(key, source, total, dest);
+    // decode_cbc(key, "love cbc", source, total, dest);
 
     image_save_pam(dec, "decoded.pam");
     // To convert from pam to png, use:

@@ -48,6 +48,7 @@ main(int argc __attribute__((unused)), char *argv[])
     const char *source = (const char *) img->pixels;
     char *dest = (char *) enc->pixels;
     encode_ecb(key, source, total, dest);
+    // encode_cbc(key, "love cbc", source, total, dest);
 
     image_save_pam(enc, "encoded.pam");
     // To convert from pam to png, use:
